@@ -1,0 +1,12 @@
+data/
+docs/
+logs/
+temp/
+venv/
+.ipynb_checkpoints/
+.vscode/
+.pytest_cache/
+**/__pycache__/
+.env
+.todo
+DOTENV_PATH
