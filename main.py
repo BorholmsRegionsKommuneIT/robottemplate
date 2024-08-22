@@ -11,8 +11,9 @@ from brkrpautils import get_credentials, TOPdeskIncidentClient
 # If using pandas
 # pd.set_option("display.max_colwidth", None)
 sys.dont_write_bytecode = True
-dotenv_path_str = Path("DOTENV_PATH")
+pd.set_option('display.max_columns', None)
 
+dotenv_path_str = Path("DOTENV_PATH")
 with dotenv_path_str.open("r") as file:
     DOTENV_PATH = file.readline().strip()
 
