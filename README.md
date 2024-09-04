@@ -1,38 +1,57 @@
 ## Robot Template
 
-Dette er ikke en pakke. Det er et template. Brug copy paste
-
-### Filstruktur
-- I starten, kan det være svært at vide hvad der er en god ide at enkapsulere. Af hensyn til nem kørsel, kan det være en god ide at køre alt i en fil inkl funktionerne. 
-- main.py ligger lokalt hos udvikleren. Commit ofte til github.
-- data, logs, .env ligger i automatikoutput. passwords ligger i pam.
-
-### Vejledning til udarbejdelse af docs. 
-
-- Hvorfor gør vi det? Fx "Så timelønnede kan få udbetalt pension" 
-- Få styr på dine datakilder. Hvor kommer info fra og hvad indeholder det af data. Hvilken periode? Indeholde kilden alt den information der er behov for, til at producere output?  
-- Transformer data fra datakilder til et format hvor du ved hvad 1 række er. Evt flere tabeller. Gem gerne data op SQL serveren. 
-- Beskriv hvad der skal gøres, uafhængigt af hvordan. Fx alder under 21, lnklasse 001 skal ikke undersøges.
-- Husk output skal ikke afhænge timing, men af input. Så gør perioden explicit eller afhængig af input, men ikke kørselstidspunkt.  
-  
+Dette er ikke en pakke. Det er en template. Brug copy paste :-)
 
 
-### Dependencies
+### Vejledning til udarbejdelse af docs.
 
-## os2apwrapper installation
+- Hvorfor gør vi det? Fx "Så timelønnede kan få udbetalt pension"
+- Få styr på dine datakilder før der udarbejdes docs. Hvor kommer info fra og hvad indeholder det af data. Hvilken periode? Indeholder kilden alt den information der er behov for, til at producere output?
+- Transformer data fra datakilder til et format hvor du ved hvad en række er. Evt flere tabeller med veldefinerede relationer. Gem gerne data op på SQL serveren.
+- Beskriv hvad der skal gøres, uafhængigt af hvordan. Fx "alder under 21", "manr med lnklasse 5678 skal ikke have pension - filtrer dem fra".
+- Husk output skal ikke afhænge af kørselstidspunkt, men af input. Så gør perioden explicit i koden eller tilføj input fil. Brug ikke kørselstidspunkt til andet end `SESSION_ID`.
+- fagperson leverer output som, udvikler skal reproducere. Output skal gerne indeholde tænkelige edge cases. 
 
-Hvis pip ikke kan installere fra `pip install -r requirements.txt`, så kør github pakkerne individuelt:
+### Dependencies with [uv](https://docs.astral.sh/uv/)
+
+Pypi packages can be installed with:
 
 ```console
-pip install os2apwrapper@git+https://github.com/BorholmsRegionsKommuneIT/os2apwrapper@main
-pip install brkrpautils@git+https://github.com/BorholmsRegionsKommuneIT/brkrpautils@main
+uv add requests
 ```
 
-### Update git pakker
-To update you'll need to add the `--force-reinstall` parameter to the pip install command. This command can also be used as the install command.
+Install a git dependency:
+
 ```console
-pip install --force-reinstall os2apwrapper@git+https://github.com/BorholmsRegionsKommuneIT/os2apwrapper@main
+uv add brkrpautils --git https://github.com/BorholmsRegionsKommuneIT/brkrpautils
 ```
-If you don't want to also reinstall the dependencies you can add the following parameter `--no-deps`.
 
-If your project is using older versions of the packages that this project is using, you might need to add the `--upgrade` parameter in between `install` and `--force-reinstall`.
+Declare a dependency and it's source in `pyproject.toml`:
+
+```toml
+[project]
+dependencies = [
+    "brkrpautils",
+]
+
+[tool.uv.sources]
+brkrpautils = { git = "https://github.com/BorholmsRegionsKommuneIT/brkrpautils" }
+```
+
+And declare dev dependencies like this:
+
+```toml
+[tool.uv]
+dev-dependencies = [
+    "ruff",
+    "ipykernel",
+]
+```
+
+Create the virtual environment with the chosen Python version, and install all the dependencies, including the dev ones:
+
+```console
+uv venv --python 3.12
+uv sync
+```
+

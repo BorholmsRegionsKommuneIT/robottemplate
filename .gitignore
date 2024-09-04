@@ -3,6 +3,8 @@ docs/
 logs/
 temp/
 venv/
+.venv/
+robottemplate.egg-info/
 .ipynb_checkpoints/
 .vscode/
 .pytest_cache/

@@ -1,6 +1,0 @@
-python-dotenv
-pendulum
-loguru
-os2apwrapper
-brkrpautils @ git+https://github.com/BorholmsRegionsKommuneIT/brkrpautils@main
-os2apwrapper @ git+https://github.com/BorholmsRegionsKommuneIT/os2apwrapper@main
