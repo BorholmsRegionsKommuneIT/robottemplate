@@ -1,7 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "pendulum",
 #     "python-dotenv",
 #     "loguru",
 #     "brkrpautils",
@@ -9,71 +8,79 @@
 #     "topdeskpy",
 # ]
 # [tool.uv.sources]
-# brkrpautils = { git = "https://github.com/BorholmsRegionsKommuneIT/brkrpautils" }
 # os2apwrapper = { git = "https://github.com/BorholmsRegionsKommuneIT/os2apwrapper" }
 # topdeskpy = { git = "https://github.com/BorholmsRegionsKommuneIT/topdeskpy" }
 # ///
 
-
-# Hvor logger vi henne? I pakker eller i main?
-
 import os
 import time
+import json
 from pathlib import Path
+import datetime
 
 from dotenv import load_dotenv  # python-dotenv
-import pendulum
 from loguru import logger
-from os2apwrapper import ApiClient
-from brkrpautils import get_credentials
+
+# from os2apwrapper import ApiClient
 from topdeskpy import Topdeskclient
 
 # If using pandas
 # pd.set_option("display.max_colwidth", None)
 
-
-dotenv_path_str = Path("DOTENV_PATH")
-with dotenv_path_str.open("r") as file:
-    DOTENV_PATH = file.readline().strip()
-
-load_dotenv(DOTENV_PATH, override=True)
-
+DOWNLOAD_MODE = 0
+SAMPLE_MODE = 0
 COMPUTERNAME = os.environ["COMPUTERNAME"]
-USER = os.getenv("USER")
-SERVER_PREFIX = os.getenv("SERVER_PREFIX")
-FOLDER_PATH = Path(os.getenv("FOLDER_DATA"))
-PAM_PATH = Path(os.getenv("PAM_PATH"))
+TIMESTAMP = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+# Project root .env
+load_dotenv(override=True)
+AUTOMATIKDATA_PATH = Path(os.getenv("AUTOMATIKDATA_PATH"))
+BRK_PAM_PATH = Path(os.getenv("BRK_PAM_PATH"))
+ROBOTUSER = os.getenv("ROBOTUSER")
 PROCESS_ID = int(os.getenv("PROCESS_ID"))
+ROBOT_DESCRIPTION = os.getenv("ROBOT_DESCRIPTION")
 
-# Topdesk
+# Automatikdata
+load_dotenv(dotenv_path=Path(f"{AUTOMATIKDATA_PATH}/.env"), override=True)
+SERVER_PREFIX = os.getenv("SERVER_PREFIX")
 TOPDESK_BASE_URL = os.getenv("TOPDESK_BASE_URL")
-TD_USERNAME = get_credentials(pam_path=PAM_PATH, user=USER, fagsystem="topdesk")[0]
-TD_PASSWORD = get_credentials(pam_path=PAM_PATH, user=USER, fagsystem="topdesk")[1]
+PROCESS_ID = int(os.getenv("PROCESS_ID"))
+DATA_FOLDER_PATH = Path(f"{AUTOMATIKDATA_PATH}/{ROBOTUSER}/data")
+LOGS_FOLDER_PATH = Path(f"{AUTOMATIKDATA_PATH}/{ROBOTUSER}/logs")
 
-# os2autoprocess
-autoproces = ApiClient(print_everything=False)
+# Shared pam folder
+PAM_PATH_SHARED = Path(f"{BRK_PAM_PATH}/SharedFiles")
+
+# Robot Specific PAM file
+PAM_PATH_ROBOT = Path(f"{BRK_PAM_PATH}/{ROBOTUSER}/{ROBOTUSER}.json")
+
+# Read the Topdesk credentials
+with open(Path(PAM_PATH_SHARED / "topdesk.json"), "r") as file:
+    topdesk_credentials = json.load(file)
+
+# Extract credentials from the JSON data
+TD_USERNAME = topdesk_credentials.get("username")
+TD_PASSWORD = topdesk_credentials.get("password")
+
+# os2autoproces
+# os2autoproces = ApiClient(print_everything=False)
 
 # choose to download or run on already downloaded data
-DOWNLOAD_MODE = 0
-TIMESTAMP = pendulum.now().strftime("%Y%m%d%H%M%S")
-
 if COMPUTERNAME.startswith(SERVER_PREFIX):
     DOWNLOAD_MODE = 1  # 0 / 1
 if DOWNLOAD_MODE == 0:
-    SESSION_ID = USER + "_" + "persistent_test_data"
+    SESSION_ID = ROBOTUSER + "_" + "persistent_test_data"
 else:
-    SESSION_ID = USER + "_" + TIMESTAMP
+    SESSION_ID = ROBOTUSER + "_" + TIMESTAMP
 
-FOLDER_DATA_SESSION = Path(FOLDER_PATH / SESSION_ID)
+FOLDER_DATA_SESSION = Path(DATA_FOLDER_PATH / SESSION_ID)
 
 # Logging
-LOG_FOLDER_PATH = Path(os.getenv("LOG_PATH"))
-LOG_FILE = Path(f"{LOG_FOLDER_PATH}", f"{TIMESTAMP}.log")
+LOG_FILE = Path(f"{LOGS_FOLDER_PATH}", f"{TIMESTAMP}.log")
 
 # run only if logger is not already set
-
-if not any(str(handler._name) == LOG_FILE for handler in logger._core.handlers.values()):
-    logger.add(LOG_FILE, backtrace=True, diagnose=True, catch=True)
+# if not any(str(handler._name) == LOG_FILE for handler in logger._core.handlers.values()):
+#     logger.add(LOG_FILE, backtrace=True, diagnose=True, catch=True)
 
 
 def main():
@@ -83,28 +90,25 @@ def main():
 if __name__ == "__main__":
     START_TIME = time.time()
     try:
-        autoproces.update_process(process_id=PROCESS_ID, phase="DEVELOPMENT", status="INPROGRESS")
-        if COMPUTERNAME.startswith(SERVER_PREFIX):
-            autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="INPROGRESS")
+        # if COMPUTERNAME.startswith(SERVER_PREFIX):
+        # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="INPROGRESS")
 
         main()
 
-        autoproces.update_process(process_id=PROCESS_ID, phase="DEVELOPMENT", status="PENDING")
-        if COMPUTERNAME.startswith(SERVER_PREFIX):
-            autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="PENDING")
+        # if COMPUTERNAME.startswith(SERVER_PREFIX):
+        # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="PENDING")
         END_TIME = time.time()
         DURATION = round(END_TIME - START_TIME)
         logger.info(f"the session took {DURATION} seconds in downloadmode {DOWNLOAD_MODE} on {COMPUTERNAME}")
 
     except Exception:
         logger.exception("An error occurred.")
-        autoproces.update_process(process_id=PROCESS_ID, phase="DEVELOPMENT", status="FAILED")
-        # report to autoproces
+        # report to os2autoproces
         if COMPUTERNAME.startswith(SERVER_PREFIX):
-            autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="FAILED")
+            # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="FAILED")
             # report to Topdek
             td_client = Topdeskclient(TOPDESK_BASE_URL, TD_USERNAME, TD_PASSWORD)
             td_client.create_incident(
-                request=f"{USER} with os2autoproces id: {PROCESS_ID} failed",
+                request=f"{ROBOTUSER} - {ROBOT_DESCRIPTION} - failed",
                 callType="Information",
             )
