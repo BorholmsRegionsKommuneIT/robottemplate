@@ -3,27 +3,23 @@ name = "robottemplate"
 version = "0.1.0"
 description = "python rpa flow template"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "python-dotenv>=1.0.1",
-    "pendulum",
-    "loguru",
-    "brkrpautils",
-    "os2apwrapper",
-    "topdeskpy",
+  "python-dotenv", # You can specify a version like "python-dotenv = '>=1.0'"
+  "os2apwrapper",
+  "topdeskpy",
+  "opuspy",
+  "ipykernel",
 ]
 
 [tool.uv]
-dev-dependencies = [
-  "ruff",
-  "ipykernel",
-  "ipython",
-]
+dev-dependencies = ["ruff", "ipykernel", "ipython"]
+
 
 [tool.uv.sources]
-brkrpautils = { git = "https://github.com/BorholmsRegionsKommuneIT/brkrpautils" }
 os2apwrapper = { git = "https://github.com/BorholmsRegionsKommuneIT/os2apwrapper" }
 topdeskpy = { git = "https://github.com/BorholmsRegionsKommuneIT/topdeskpy" }
+opuspy = { git = "https://github.com/BorholmsRegionsKommuneIT/opuspy" }
 
 [tool.ruff]
 line-length = 240
