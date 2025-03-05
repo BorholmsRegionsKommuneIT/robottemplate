@@ -1,7 +1,3 @@
-data/
-docs/
-logs/
-temp/
 venv/
 .venv/
 robottemplate.egg-info/
@@ -11,4 +7,4 @@ robottemplate.egg-info/
 **/__pycache__/
 .env
 .todo
-DOTENV_PATH
+

@@ -1,54 +1,45 @@
+import logging
 import time
-import json
-from pathlib import Path
+import pandas as pd
 
-# from os2apwrapper import ApiClient
-from topdeskpy import Topdeskclient
 from opuspy import say_hello_from_opuspy
 from config import Config
 
 # init config and logger
-config = Config(download_mode=0, sample_mode=0)
-logger = config.logger
+config = Config()
+log = logging.getLogger(__name__)
 
-# Read Topdesk credentials
-with open(Path(f"{config.PAM_PATH_SHARED}/topdesk.json"), "r") as file:
-    topdesk_credentials = json.load(file)
-TD_USERNAME = topdesk_credentials.get("username")
-TD_PASSWORD = topdesk_credentials.get("password")
-td_client = Topdeskclient(config.TOPDESK_BASE_URL, TD_USERNAME, TD_PASSWORD)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", 100)
 
-# run only if logger is not already set
-# if not any(str(handler._name) == LOG_FILE for handler in logger._core.handlers.values()):
-#     logger.add(LOG_FILE, backtrace=True, diagnose=True, catch=True)
+# Make directory for the report at DATA_FOLDER_SESSION_PATH, if it does not exist
+config.DATA_FOLDER_SESSION_PATH.mkdir(parents=True, exist_ok=True)
+
+
+input_dfs = {}
+
+for file_path in config.DATA_FOLDER_PATH.glob("input*.csv"):
+    key = file_path.stem
+    # Reading the CSV file and storing it in the dictionary. All cols as strings
+    input_dfs[key] = pd.read_csv(filepath_or_buffer=file_path, sep=";", dtype=str)
 
 
 def main():
     say_hello_from_opuspy()
-    logger.info("Starting the script")
 
 
 if __name__ == "__main__":
-    START_TIME = time.time()
     try:
-        # if COMPUTERNAME.startswith(SERVER_PREFIX):
-        # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="INPROGRESS")
-
+        start_time = time.time()
         main()
+        end_time = time.time()
+        log.info(f"the process took {round(end_time - start_time)} seconds")
 
-        # if COMPUTERNAME.startswith(SERVER_PREFIX):
-        # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="PENDING")
-        END_TIME = time.time()
-        DURATION = round(END_TIME - START_TIME)
-        logger.info(f"the session took {DURATION} seconds in downloadmode {config.DOWNLOAD_MODE} on {config.COMPUTERNAME}")
-
-    except Exception:
-        logger.exception("An error occurred.")
-        # report to os2autoproces
+    except:
+        # report to Topdek only if running on server
         if config.COMPUTERNAME.startswith(config.SERVER_PREFIX):
-            # os2autoproces.update_process(process_id=PROCESS_ID, phase="OPERATION", status="FAILED")
-            # report to Topdek
-            td_client.create_incident(
+            config.TOPDESK_CLIENT.create_incident(
                 request=f"{config.ROBOTUSER} - {config.ROBOT_DESCRIPTION} - failed",
                 callType="Information",
             )
+        raise

@@ -1,45 +1,85 @@
 import os
 from pathlib import Path
-import datetime
-from dotenv import load_dotenv  # python-dotenv
 import logging
+import json
+from datetime import datetime, timedelta
+from topdeskpy import Topdeskclient
+from dotenv import load_dotenv  # pip install python-dotenv
 
 
 class Config:
-    def __init__(self, download_mode, sample_mode):
+    def __init__(self):
+        # Manually set DOWNLOAD_MODE, SAMPLE_MODE, CUSTOM_YEAR_MONTH
+        self.DOWNLOAD_MODE = 0  # 1 will download from opus, 0 will not. Possible to download new an old year_months.
+        self.SAMPLE_MODE = 0  # l will use sample cpr from input_cpr_test.csv
+        self.YEAR_MONTH = "2024-06"  # Will be overwritten if run on server
         load_dotenv(override=True)
+        # Read path to remote .env from local .env
+        self.DOTENV_PATH = Path(os.getenv("DOTENV_PATH"))
+
+        if self.DOTENV_PATH.exists():
+            load_dotenv(dotenv_path=self.DOTENV_PATH, override=True)
+
+        # Read environment variables from remote .env
+        self.TIMESTAMP = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.COMPUTERNAME = os.environ["COMPUTERNAME"]
-        self.TIMESTAMP = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.AUTOMATIKDATA_PATH = Path(os.getenv("AUTOMATIKDATA_PATH"))
         self.BRK_PAM_PATH = Path(os.getenv("BRK_PAM_PATH"))
         self.ROBOTUSER = os.getenv("ROBOTUSER")
         self.PROCESS_ID = int(os.getenv("PROCESS_ID"))
         self.ROBOT_DESCRIPTION = os.getenv("ROBOT_DESCRIPTION")
         self.SERVER_PREFIX = os.getenv("SERVER_PREFIX")
-        self.TOPDESK_BASE_URL = os.getenv("TOPDESK_BASE_URL")
 
-        # Modes explicitly set during initialization
-        self.DOWNLOAD_MODE = download_mode
-        self.SAMPLE_MODE = sample_mode
-
-        # Derived paths
-        self.DATA_FOLDER_PATH = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/data")
-        self.LOGS_FOLDER_PATH = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/logs")
-        self.PAM_PATH_SHARED = Path(f"{self.BRK_PAM_PATH}/SharedFiles")
-        self.PAM_PATH_ROBOT = Path(f"{self.BRK_PAM_PATH}/{self.ROBOTUSER}/{self.ROBOTUSER}.json")
-        self.DATA_FOLDER_SESSION_PATH = Path(f"{self.DATA_FOLDER_PATH}/{self.TIMESTAMP}")
-
+        # On Server always download and run the previous month
         if self.COMPUTERNAME.startswith(self.SERVER_PREFIX):
             self.DOWNLOAD_MODE = 1
+            self.SAMPLE_MODE = 0
+            date_obj = datetime.strptime(self.TIMESTAMP, "%Y-%m-%d-%H-%M-%S").date()
+            previous_month = date_obj.replace(day=1) - timedelta(days=1)
+            self.YEAR_MONTH = f"{previous_month.year}-{previous_month.month:02d}"
+
+        # ------------------------------- Derived paths ------------------------------ #
+        self.DATA_FOLDER_PATH = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/data")
+        self.LOGS_FOLDER_PATH = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/logs")
+        self.INPUT_FOLDER_PATH = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/input")
+        self.PAM_PATH_SHARED = Path(f"{self.BRK_PAM_PATH}/SharedFiles")
+        self.PAM_PATH_ROBOT = Path(f"{self.BRK_PAM_PATH}/{self.ROBOTUSER}/{self.ROBOTUSER}.json")
+        self.DATA_FOLDER_SESSION_PATH = Path(f"{self.DATA_FOLDER_PATH}/{self.YEAR_MONTH}")
+
+        # ---------------------------------------------------------------------------- #
+        #                                     Opus                                     #
+        # ---------------------------------------------------------------------------- #
+        self.SAPSHCUT_PATH = Path(os.getenv("SAPSHCUT_PATH"))
+
+        # ---------------------------------------------------------------------------- #
+        #                             Rollebaseret Indgang                             #
+        # ---------------------------------------------------------------------------- #
+        self.RI_URL = Path(os.getenv("RI_URL"))
+
+        # ---------------------------------------------------------------------------- #
+        #                                    Topdesk                                   #
+        # ---------------------------------------------------------------------------- #
+        self.TOPDESK_BASE_URL = os.getenv("TOPDESK_BASE_URL")
+        with open(Path(f"{self.PAM_PATH_SHARED}/topdesk.json"), "r") as file:
+            topdesk_credentials = json.load(file)
+        self.TD_USERNAME = topdesk_credentials.get("username")
+        self.TD_PASSWORD = topdesk_credentials.get("password")
+
+        self.TOPDESK_CLIENT = Topdeskclient(self.TOPDESK_BASE_URL, self.TD_USERNAME, self.TD_PASSWORD)
+
+        # ---------------------------------------------------------------------------- #
+        #                                    Logger                                    #
+        # ---------------------------------------------------------------------------- #
 
         # Configure the logger
-        self.LOG_FILE = Path(f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/logs", f"{self.TIMESTAMP}.log")
+        self.LOG_FILE = Path(
+            f"{self.AUTOMATIKDATA_PATH}/{self.ROBOTUSER}/logs",
+            f"{self.TIMESTAMP}.log",
+        )
 
         # Define the logger configuration
         logger = logging.getLogger()
-
-        # Set the lowest-level logger (root logger) to DEBUG so it will catch all logs
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
         # Create a handler for writing logs to the console
         console_handler = logging.StreamHandler()
@@ -62,25 +102,4 @@ class Config:
             logger.addHandler(console_handler)
             logger.addHandler(file_handler)
 
-        self.logger = logging.getLogger(__name__)
-
-    def __repr__(self):
-        return (
-            f"COMPUTERNAME={self.COMPUTERNAME},\n"
-            f"TIMESTAMP={self.TIMESTAMP},\n"
-            f"AUTOMATIKDATA_PATH={self.AUTOMATIKDATA_PATH},\n"
-            f"BRK_PAM_PATH={self.BRK_PAM_PATH},\n"
-            f"ROBOTUSER={self.ROBOTUSER},\n"
-            f"PROCESS_ID={self.PROCESS_ID},\n"
-            f"ROBOT_DESCRIPTION={self.ROBOT_DESCRIPTION},\n"
-            f"SERVER_PREFIX={self.SERVER_PREFIX},\n"
-            f"TOPDESK_BASE_URL={self.TOPDESK_BASE_URL},\n"
-            f"DOWNLOAD_MODE={self.DOWNLOAD_MODE},\n"
-            f"SAMPLE_MODE={self.SAMPLE_MODE},\n"
-            f"LOG_FILE={self.LOG_FILE},\n"
-            f"DATA_FOLDER_PATH={self.DATA_FOLDER_PATH},\n"
-            f"LOGS_FOLDER_PATH={self.LOGS_FOLDER_PATH},\n"
-            f"PAM_PATH_SHARED={self.PAM_PATH_SHARED},\n"
-            f"PAM_PATH_ROBOT={self.PAM_PATH_ROBOT},\n"
-            f"DATA_FOLDER_SESSION_PATH={self.DATA_FOLDER_SESSION_PATH}\n"
-        )
+        self.logger = logging.getLogger(__name__)  # Clould also be self.logger = logger

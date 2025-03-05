@@ -1,20 +1,17 @@
 [project]
 name = "robottemplate"
 version = "0.1.0"
-description = "python rpa flow template"
+description = "python automatik template"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-  "python-dotenv", # You can specify a version like "python-dotenv = '>=1.0'"
-  "os2apwrapper",
-  "topdeskpy",
-  "opuspy",
-  "ipykernel",
+  "python-dotenv>=1.0.1",
+  "pandas>=1.0.0",
+  "os2apwrapper>=0.0.1",
+  "topdeskpy>=0.1.0",
+  "opuspy>=0.6.0",
+  "ipykernel>=6.0.0"
 ]
-
-[tool.uv]
-dev-dependencies = ["ruff", "ipykernel", "ipython"]
-
 
 [tool.uv.sources]
 os2apwrapper = { git = "https://github.com/BorholmsRegionsKommuneIT/os2apwrapper" }
@@ -22,4 +19,4 @@ topdeskpy = { git = "https://github.com/BorholmsRegionsKommuneIT/topdeskpy" }
 opuspy = { git = "https://github.com/BorholmsRegionsKommuneIT/opuspy" }
 
 [tool.ruff]
-line-length = 240
+line-length = 140
