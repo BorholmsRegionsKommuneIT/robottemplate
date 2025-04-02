@@ -21,42 +21,16 @@ Dette er ikke en pakke. Det er en template for robotter. Kør `uv init` og kopie
 
 ### Dependencies with [uv](https://docs.astral.sh/uv/)
 
-Pypi packages can be installed with:
+Pypi packages can be added with:
 
 ```console
 uv add requests
 ```
 
-Install a git dependency:
+Add a git dependency:
 
 ```console
-uv add brkrpautils --git https://github.com/BorholmsRegionsKommuneIT/brkrpautils
+uv add "brkrpautils @ git+https://github.com/BorholmsRegionsKommuneIT/brkrpautils"
 ```
 
-Declare a dependency and it's source in `pyproject.toml`:
-
-```toml
-[project]
-dependencies = [
-    "brkrpautils",
-]
-
-[tool.uv.sources]
-brkrpautils = { git = "https://github.com/BorholmsRegionsKommuneIT/brkrpautils" }
-```
-
-And declare dev dependencies like this:
-
-```toml
-[tool.uv]
-dev-dependencies = [
-    "ruff",
-    "ipykernel",
-]
-```
-
-Syncing the env:
-
-```console
-uv sync
-```
+Syncing the env with `uv sync` or just run with `uv run` and the sync happen automagically.
