@@ -1,9 +1,14 @@
 import logging
 import time
 import pandas as pd
-
 from opuspy import say_hello_from_opuspy
-from config import Config
+from brkrpautils import Config
+
+# Used by ExampleChildConfig
+import os
+import json
+from pathlib import Path
+from topdeskpy import Topdeskclient
 
 # init config and logger
 config = Config()
@@ -26,6 +31,38 @@ for file_path in config.DATA_FOLDER_PATH.glob("input*.csv"):
 
 def main():
     say_hello_from_opuspy()
+    extendedConfig = ExampleChildConfig()
+    extendedConfig.hello_from_child_class()
+
+
+class ExampleChildConfig(Config):
+    def __init__(self):
+        super().__init__()
+
+        self.YOUR_VERY_OWN_VARIABLE_HERE = "Hi mom! I'm a robot now!"
+        # ---------------------------------------------------------------------------- #
+        #                                     Opus                                     #
+        # ---------------------------------------------------------------------------- #
+        self.SAPSHCUT_PATH = Path(os.getenv("SAPSHCUT_PATH"))
+
+        # ---------------------------------------------------------------------------- #
+        #                             Rollebaseret Indgang                             #
+        # ---------------------------------------------------------------------------- #
+        self.RI_URL = Path(os.getenv("RI_URL"))
+
+        # ---------------------------------------------------------------------------- #
+        #                                    Topdesk                                   #
+        # ---------------------------------------------------------------------------- #
+        self.TOPDESK_BASE_URL = os.getenv("TOPDESK_BASE_URL")
+        with open(Path(f"{self.PAM_PATH_SHARED}/topdesk.json"), "r") as file:
+            topdesk_credentials = json.load(file)
+        self.TD_USERNAME = topdesk_credentials.get("username")
+        self.TD_PASSWORD = topdesk_credentials.get("password")
+
+        self.TOPDESK_CLIENT = Topdeskclient(self.TOPDESK_BASE_URL, self.TD_USERNAME, self.TD_PASSWORD)
+
+    def hello_from_child_class(self):
+        log.info(self.YOUR_VERY_OWN_VARIABLE_HERE)
 
 
 if __name__ == "__main__":
