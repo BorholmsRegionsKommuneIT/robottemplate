@@ -10,7 +10,8 @@ dependencies = [
   "os2apwrapper>=0.0.1",
   "topdeskpy>=0.1.0",
   "opuspy>=0.6.0",
-  "ipykernel>=6.0.0"
+  "ipykernel>=6.0.0",
+  "loguru>=0.7.3",
 ]
 
 [tool.uv.sources]

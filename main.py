@@ -1,8 +1,9 @@
 import logging
 import time
-import pandas as pd
 
+import pandas as pd
 from opuspy import say_hello_from_opuspy
+
 from config import Config
 
 # init config and logger

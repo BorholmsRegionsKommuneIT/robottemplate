@@ -1,10 +1,11 @@
-import os
-from pathlib import Path
-import logging
 import json
+import logging
+import os
 from datetime import datetime, timedelta
-from topdeskpy import Topdeskclient
+from pathlib import Path
+
 from dotenv import load_dotenv  # pip install python-dotenv
+from topdeskpy import Topdeskclient
 
 
 class Config:

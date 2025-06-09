@@ -6,10 +6,13 @@ Dette er ikke en pakke. Det er en template for robotter. Kør `uv init` og kopie
 
 - Hvorfor gør vi det? Fx "Så timelønnede kan få udbetalt pension"
 - Få styr på dine datakilder før der udarbejdes docs. Hvor kommer info fra og hvad indeholder det af data. Hvilken periode? Indeholder kilden alt den information der er behov for, til at producere output?
-- Transformer data fra datakilder til et format hvor du ved hvad en række er. Evt flere tabeller med veldefinerede relationer. Gem gerne data op på SQL serveren.
-- Beskriv hvad der skal gøres, uafhængigt af hvordan. Fx "alder under 21", "manr med lnklasse 5678 skal ikke have pension - filtrer dem fra".
+- Transformer data fra datakilder til et format hvor du ved hvad en række er. Evt flere tabeller med veldefinerede relationer. 
+- Adskil I/O fra forretningslogikken fra start. Selv hvis det ikke er smart fra et performance hensyn. 
+- Brug tid på at få data input modeleret korrekt og få det typed. Brug med fordel dataclasses. 
+- Gå efter deklerativ forretningslogik: beskriv hvad der skal gøres, uafhængigt af hvordan.
 - Husk output skal ikke afhænge af kørselstidspunkt, men af input. Så gør perioden explicit i koden eller tilføj input fil. Brug ikke kørselstidspunkt til andet end `SESSION_ID`.
-- fagperson leverer output som, udvikler skal reproducere. Output skal gerne indeholde tænkelige edge cases.
+- fagperson leverer output som, udvikler skal reproducere. Output skal gerne indeholde tænkelige edge cases. Fagpersonens ouput skal være så klart at, udvikler nemt at omskrive det til tests.  
+  
 
 ### Kodestil
 
